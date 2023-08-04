@@ -572,96 +572,126 @@ export default class CommonService {
 
 
     //Create planner for incident tasks based on group id
-    public async createPlannerPlan(group_id: string, incident_id: string, graph: Client, graphContextURL: string, tenantID: any): Promise<any> {
-        return new Promise(async (resolve, reject) => {
-            try {
+    public async createPlannerPlan(group_id: string, incident_id: string, graph: Client,
+        graphContextURL: string, tenantID: any, generalChannelId?: string, fromTaskModule?: boolean) {
+        try {
+            const planTitle = "Incident - " + incident_id + ": Tasks";
+            const plannerObj = { "owner": group_id, "title": planTitle };
 
-                const planTitle = "Incident - " + incident_id + ": Tasks"
-                const plannerObj = {
-                    "owner": group_id,
-                    "title": planTitle
-                };
+            let plannerResponse = await this.sendGraphPostRequest(graphConfig.plannerGraphEndpoint, graph, plannerObj);
+            let planId = plannerResponse.id;
+            console.log(constants.infoLogPrefix + "Planner plan created");
 
-                let plannerResponse = await this.sendGraphPostRequest(graphConfig.plannerGraphEndpoint, graph, plannerObj);
-                let planId = plannerResponse.id;
-                console.log(constants.infoLogPrefix + "Planner plan created");
+            //Create default bucket("To do") for the plan
+            const bucketObj = { "name": constants.plannerBucketTitle, "planId": planId, "orderHint": " !" };
 
-                //Create default bucket("To do") for the plan
-                const bucketObj = {
-                    "name": constants.plannerBucketTitle,
-                    "planId": planId,
-                    "orderHint": " !"
-                };
+            await this.sendGraphPostRequest(graphConfig.bucketsGraphEndpoint, graph, bucketObj);
 
-                await this.sendGraphPostRequest(graphConfig.bucketsGraphEndpoint, graph, bucketObj);
-
-                //get general channel id
-                const generalChannelId = await this.getChannelId(graph, group_id, constants.General);
-
-                const graphTabEndPoint = graphConfig.teamsGraphEndpoint + "/" + group_id + graphConfig.channelsGraphEndpoint + "/" + generalChannelId + graphConfig.tabsGraphEndpoint;
-                const tasksAppEndPoint = graphContextURL + graphConfig.tasksbyPlannerAppGraphEndPoint;
-
-                let tasksTabObj = {};
-                if (graphContextURL === constants.commercialGraphContextURL) {
-                    //for commercial tenant
-                    tasksTabObj = {
-                        "displayName": planTitle,
-                        "teamsApp@odata.bind": tasksAppEndPoint,
-                        "configuration": {
-                            "entityId": "tt.c_" + generalChannelId + "_p_" + planId,
-                            "contentUrl": "https://tasks.office.com/{tid}/Home/PlannerFrame?page=7&auth_pvr=OrgId&auth_upn={userPrincipalName}&groupId={groupId}&planId=" + planId + "&channelId={channelId}&entityId={entityId}&tid={tid}&userObjectId={userObjectId}&subEntityId={subEntityId}&sessionId={sessionId}&theme={theme}&mkt={locale}&ringId={ringId}&PlannerRouteHint={tid}",
-                            "removeUrl": "https://tasks.office.com/{tid}/Home/PlannerFrame?page=13&auth_pvr=OrgId&auth_upn={userPrincipalName}&groupId={groupId}&planId=" + planId + "&channelId={channelId}&entityId={entityId}&tid={tid}&userObjectId={userObjectId}&subEntityId={subEntityId}&sessionId={sessionId}&theme={theme}&mkt={locale}&ringId={ringId}&PlannerRouteHint={tid}",
-                            "websiteUrl": "https://tasks.office.com/" + tenantID + "/Home/PlanViews/" + planId + "?Type=PlanLink&Channel=TeamsTab"
-                        }
-                    }
-                } else {
-                    //for GCCH tenant
-                    tasksTabObj = {
-                        "displayName": planTitle,
-                        "teamsApp@odata.bind": tasksAppEndPoint,
-                        "configuration": {
-                            "entityId": planId,
-                            "contentUrl": "https://tasks.office365.us/{tid}/Home/PlannerFrame?page=7&planId=" + planId + "&auth_pvr=Orgid&auth_upn={userPrincipalName}&groupId={groupId}&entityId={entityId}&tid={tid}&userObjectId={userObjectId}&channelId={channelId}&sessionId={sessionId}&theme={theme}&mkt={locale}&ringId={ringId}&PlannerRouteHint={tid}",
-                            "removeUrl": "https://tasks.office365.us/{tid}/Home/PlannerFrame?page=13&planId=" + planId + "&auth_pvr=Orgid&auth_upn={userPrincipalName}&groupId={groupId}&entityId={entityId}&tid={tid}&userObjectId={userObjectId}&channelId={channelId}&sessionId={sessionId}&theme={theme}&mkt={locale}&ringId={ringId}&PlannerRouteHint={tid}",
-                            "websiteUrl": "https://tasks.office365.us/" + tenantID + "/Home/PlanViews/" + planId,
-                        }
-                    }
-                }
-                //adding tasks by planner and todo app to general channel
-                await this.sendGraphPostRequest(graphTabEndPoint, graph, tasksTabObj);
-                console.log(constants.infoLogPrefix + "Tasks app is added to General Channel");
-
-                resolve(planId);
-
-            } catch (ex) {
-                console.error(
-                    constants.errorLogPrefix + "CommonServices_CreatePlannerPlan \n",
-                    JSON.stringify(ex)
-                );
-                reject(ex);
+            let general_channel_id = generalChannelId;
+            if (fromTaskModule) {
+                //Get General channel id
+                general_channel_id = await this.getChannelId(graph, group_id, constants.General);
             }
-        });
+
+            const graphTabEndPoint = graphConfig.teamsGraphEndpoint + "/" + group_id + graphConfig.channelsGraphEndpoint + "/" + general_channel_id + graphConfig.tabsGraphEndpoint;
+            const tasksAppEndPoint = graphContextURL + graphConfig.tasksbyPlannerAppGraphEndPoint;
+
+            let tasksTabObj = {};
+            if (graphContextURL === constants.commercialGraphContextURL) {
+                //for commercial tenant
+                tasksTabObj = {
+                    "displayName": planTitle,
+                    "teamsApp@odata.bind": tasksAppEndPoint,
+                    "configuration": {
+                        "entityId": "tt.c_" + generalChannelId + "_p_" + planId,
+                        "contentUrl": "https://tasks.office.com/{tid}/Home/PlannerFrame?page=7&auth_pvr=OrgId&auth_upn={userPrincipalName}&groupId={groupId}&planId=" + planId + "&channelId={channelId}&entityId={entityId}&tid={tid}&userObjectId={userObjectId}&subEntityId={subEntityId}&sessionId={sessionId}&theme={theme}&mkt={locale}&ringId={ringId}&PlannerRouteHint={tid}",
+                        "removeUrl": "https://tasks.office.com/{tid}/Home/PlannerFrame?page=13&auth_pvr=OrgId&auth_upn={userPrincipalName}&groupId={groupId}&planId=" + planId + "&channelId={channelId}&entityId={entityId}&tid={tid}&userObjectId={userObjectId}&subEntityId={subEntityId}&sessionId={sessionId}&theme={theme}&mkt={locale}&ringId={ringId}&PlannerRouteHint={tid}",
+                        "websiteUrl": "https://tasks.office.com/" + tenantID + "/Home/PlanViews/" + planId + "?Type=PlanLink&Channel=TeamsTab"
+                    }
+                };
+            }
+            else {
+                //for GCCH tenant
+                tasksTabObj = {
+                    "displayName": planTitle,
+                    "teamsApp@odata.bind": tasksAppEndPoint,
+                    "configuration": {
+                        "entityId": planId,
+                        "contentUrl": "https://tasks.office365.us/{tid}/Home/PlannerFrame?page=7&planId=" + planId + "&auth_pvr=Orgid&auth_upn={userPrincipalName}&groupId={groupId}&entityId={entityId}&tid={tid}&userObjectId={userObjectId}&channelId={channelId}&sessionId={sessionId}&theme={theme}&mkt={locale}&ringId={ringId}&PlannerRouteHint={tid}",
+                        "removeUrl": "https://tasks.office365.us/{tid}/Home/PlannerFrame?page=13&planId=" + planId + "&auth_pvr=Orgid&auth_upn={userPrincipalName}&groupId={groupId}&entityId={entityId}&tid={tid}&userObjectId={userObjectId}&channelId={channelId}&sessionId={sessionId}&theme={theme}&mkt={locale}&ringId={ringId}&PlannerRouteHint={tid}",
+                        "websiteUrl": "https://tasks.office365.us/" + tenantID + "/Home/PlanViews/" + planId,
+                    }
+                };
+            }
+            //adding tasks by planner and todo app to general channel
+            await this.sendGraphPostRequest(graphTabEndPoint, graph, tasksTabObj);
+            console.log(constants.infoLogPrefix + "Tasks app is added to General Channel");
+
+            return planId;
+        }
+        catch (error) {
+            console.error(constants.errorLogPrefix + "CommonServices_CreatePlannerPlan \n", JSON.stringify(error));
+
+            return null;
+        }
+    }
+
+    //Create Active Dashboard Tab in Incident Team General Channel
+    public async createActiveDashboardTab(graph: Client, group_id: string, generalChannelId: string,
+        graphContextURL: string, appSettings: any) {
+        try {
+            //Get TEOC app id from Teams app catalog
+            const teocAppId = await this.getGraphData(graphContextURL + graphConfig.appCatalogsTEOCAppEndpoint, graph);
+            const teocAppDataBindUrl = `${graphContextURL}${graphConfig.teamsAppsEndpoint}/${teocAppId.value[0].id}`;
+
+            //Install TEOC App to Incident Team
+            const installAppEndpoint = `${graphContextURL}${graphConfig.teamsGraphEndpoint}/${group_id}${graphConfig.installedAppsEndpoint}`;
+            const installAppBody = { "teamsApp@odata.bind": teocAppDataBindUrl };
+            await this.sendGraphPostRequest(installAppEndpoint, graph, installAppBody);
+
+            //Add TEOC App to General Channel - Active Dashboard Tab
+            const graphTabEndPoint = graphConfig.teamsGraphEndpoint + "/" + group_id
+                + graphConfig.channelsGraphEndpoint + "/" + generalChannelId + graphConfig.tabsGraphEndpoint;
+            const TEOCObj = {
+                "displayName": constants.activeDashboardTab,
+                "teamsApp@odata.bind": teocAppDataBindUrl,
+                "configuration": {
+                    "entityId": appSettings.entityId,
+                    "contentUrl": appSettings.contentUrl,
+                    "removeUrl": appSettings.removeUrl,
+                    "websiteUrl": appSettings.websiteUrl
+                }
+            };
+            await this.sendGraphPostRequest(graphTabEndPoint, graph, TEOCObj);
+
+            console.log(constants.infoLogPrefix + `TEOC App is added to Incident Team General channel's Active Dashboard Tab`);
+        }
+        catch (error) {
+            console.error(
+                constants.errorLogPrefix + "CommonServices_createAndUpdateActiveDashboardTab \n",
+                JSON.stringify(error)
+            );
+        }
+
     }
 
     //Get Channel ID of a particular team channel
     public async getChannelId(graph: any, teamGroupId: any, channelName: string) {
-        return new Promise<any>(async (resolve, reject) => {
-            try {
-                //get channel id related to current site teams group
-                const endPoint = graphConfig.teamsGraphEndpoint + "/" + teamGroupId +
-                    graphConfig.channelsGraphEndpoint +
-                    "?$filter=startsWith(displayName, '" + channelName + "')&$select=id";
-                const response = await this.getGraphData(endPoint, graph);
-                const channelId = response.value[0].id;
-                resolve(channelId);
-            } catch (error) {
-                console.error(
-                    constants.errorLogPrefix + "CommonService_getChannelId \n",
-                    JSON.stringify(error)
-                );
-                reject("Failed " + error);
-            }
-        });
+        try {
+            //get channel id related to current site teams group
+            const endPoint = graphConfig.teamsGraphEndpoint + "/" + teamGroupId +
+                graphConfig.channelsGraphEndpoint +
+                "?$filter=startsWith(displayName, '" + channelName + "')&$select=id";
+            const response = await this.getGraphData(endPoint, graph);
+            const channelId = response.value[0].id;
+            return channelId;
+        } catch (error) {
+            console.error(
+                constants.errorLogPrefix + "CommonService_getChannelId \n",
+                JSON.stringify(error)
+            );
+            return "Failed " + error;
+        }
     }
 
     //Get URL of a tab in channel of a Team

@@ -7,6 +7,7 @@ import Row from 'react-bootstrap/esm/Row';
 import "../scss/AdminSettings.module.scss";
 import RoleSettings from './RoleSettings';
 import { TeamNameConfig } from './TeamNameConfig';
+import * as constants from '../common/Constants';
 
 export interface IAdminSettingsProps {
     localeStrings: any;
@@ -25,6 +26,7 @@ export interface IAdminSettingsProps {
     setState: any;
     tenantName: string;
     siteName: any;
+    currentThemeName: string;
 }
 
 export interface IAdminSettingsState {
@@ -46,21 +48,27 @@ export default class AdminSettings extends React.Component<IAdminSettingsProps, 
 
     //render method
     render() {
+        const isDarkOrContrastTheme = this.props.currentThemeName === constants.darkMode || this.props.currentThemeName === constants.contrastMode;
         return (
             <div className='admin-settings'>
                 <div className=".col-xs-12 .col-sm-8 .col-md-4 container admin-settings-path">
                     <label>
-                        <span onClick={() => this.props.onBackClick("")} className="go-back">
+                        <span
+                            onClick={() => this.props.onBackClick("")}
+                            onKeyDown={(event) => {
+                                if (event.key === constants.enterKey)
+                                    this.props.onBackClick("")
+                            }} className="go-back">
                             <ChevronStartIcon className="path-back-icon" />
-                            <span className="back-label" title="Back">{this.props.localeStrings.back}</span>
+                            <span className="back-label" role="button" tabIndex={0} title="Back">{this.props.localeStrings.back}</span>
                         </span> &nbsp;&nbsp;
                         <span className="right-border">|</span>
                         <span>&nbsp;&nbsp;{this.props.localeStrings.adminSettingsLabel}</span>
                     </label>
                 </div>
-                <div className='admin-settings-wrapper'>
+                <div className={`admin-settings-wrapper${isDarkOrContrastTheme ? " admin-settings-wrapper-darkcontrast" : ""}`}>                            
                     <div className="container">
-                        <div className="admin-settings-heading">{this.props.localeStrings.adminSettingsLabel}</div>
+                        <h1 style={{ "margin": "0" }} aria-live="polite" role="alert"><div className="admin-settings-heading">{this.props.localeStrings.adminSettingsLabel}</div></h1>
                         <Row xl={1} lg={1} md={1} sm={1} xs={1}>
                             <Col md={12}>
                                 <div className="toggle-setting-type">
@@ -91,6 +99,7 @@ export default class AdminSettings extends React.Component<IAdminSettingsProps, 
                                 userPrincipalName={this.props.userPrincipalName}
                                 showMessageBar={this.props.showMessageBar}
                                 hideMessageBar={this.props.hideMessageBar}
+                                currentThemeName={this.props.currentThemeName}
                             />
                         }
                         {this.state.roleSettings &&

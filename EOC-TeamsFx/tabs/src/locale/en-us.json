@@ -11,7 +11,7 @@
    "_support.comment": "This string is displayed as tooltip for dashboard icon",
    "feedback": "Feedback",
    "_feedback.comment": "This string is displayed as tooltip for dashboard icon",
-   "searchPlaceholder": "Search by Incident Name / Incident Commander / Location",
+   "searchPlaceholder": "Search by Incident Name / Incident Commander / Location / Severity",
    "_searchPlaceholder.comment": "This is placeholder for Search textbox",
    "all": "All",
    "_all.comment": "This string is displayed as table header indicating that it's showing All incidents in the table",
@@ -187,7 +187,7 @@
    "_incidentNameRequired.comment": "This string is displayed when required field is missing",
    "incidentTypeRequired": "Incident Type is required.",
    "_incidentTypeRequired.comment": "This string is displayed when required field is missing",
-   "startDateRequired": "Start Date is required.",
+   "startDateRequired": "Start Time is required.",
    "_startDateRequired.comment": "This string is displayed when required field is missing",
    "statusRequired": "Status is required.",
    "_statusRequired.comment": "This string is displayed when required field is missing",
@@ -474,5 +474,11 @@
    "ChannelNameRegexError": "Channel name cannot contain the characters ~ # % & * { } + / \\ : < > .. ? | ' \"",
    "_ChannelNameRegexError.comment": "This string is displayed as error message",
    "roleUserInfoTooltipContent": "Assign users to their respective role groups here. To assign a role lead for the selected role enter that person in the role lead field.",
-   "_roleUserInfoTooltipContent.comment": "This string is displayed as Tooltip"
+   "_roleUserInfoTooltipContent.comment": "This string is displayed as Tooltip",
+   "downloadBtnLabel": "Download",
+   "_downloadBtnLabel.comment": "This string is displayed as button label",
+   "downloadPDFLinkTooltipContent": "Download as PDF",
+   "_downloadPDFLinkTooltipContent.comment": "This string is displayed as Tooltip",
+   "modifiedOn": "Modified On",
+   "_modifiedOn.comment": "This string is displayed as label for a grid"
 }
