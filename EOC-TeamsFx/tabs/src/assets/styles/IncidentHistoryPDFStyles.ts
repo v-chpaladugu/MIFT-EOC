@@ -1,9 +1,9 @@
-import { StyleSheet } from '@react-pdf/renderer';
+// import { StyleSheet } from '@react-pdf/renderer';
 
-
+// StyleSheet.create(
 
 // Create styles
-export const styles: any = StyleSheet.create({
+export const styles: any = {
     body: {
         width: "100%",
         padding: 10
@@ -90,4 +90,4 @@ export const styles: any = StyleSheet.create({
         textAlign: 'center',
         fontSize: 10
     },
-});
+};

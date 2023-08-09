@@ -13,7 +13,6 @@
         "@microsoft/microsoft-graph-client": "3.0.1",
         "@microsoft/teams-js": "^1.11.0",
         "@microsoft/teamsfx": "0.4.0",
-        "@react-pdf/renderer": "^3.1.12",
         "axios": "^0.21.1",
         "bootstrap": "5.2.3",
         "classnames": "^2.3.1",
@@ -78,7 +77,7 @@
     },
     "scripts": {
         "start": "react-scripts start",
-        "build": "react-scripts --max_old_space_size=8192 build",
+        "build": "react-scripts build",
         "eject": "react-scripts eject"
     },
     "eslintConfig": {
